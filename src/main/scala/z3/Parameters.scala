@@ -22,6 +22,12 @@ class Parameters private[z3] (private[z3] val global: Map[String, String],
    *  by default because it can cause confusing behavior. */
   def allow_datatype_overwrite(): Parameters = clone(apiBool = apiBool + ("allow_datatype_overwrite" -> true))
 
+  /** Solver parameter: automatically configure solver. */
+  def auto_config(on: Boolean): Parameters = clone(solverBool = solverBool + ("auto_config" -> on))
+
+  /** Solver parameter: enable or disable model based quantifier instantiation. */
+  def mbqi(on: Boolean): Parameters = clone(solverBool = solverBool + ("smt.mbqi" -> on))
+
   /** Solver parameter: maximum amount of memory in megabytes */
   def max_memory(megabytes: Int): Parameters = clone(solverInt = solverInt + ("max_memory" -> megabytes))
 
@@ -36,6 +42,7 @@ class Parameters private[z3] (private[z3] val global: Map[String, String],
 
   /** Solver parameter: timeout on the solver object; overwrites a global timeout */
   def timeout(milliseconds: Int): Parameters = clone(solverInt = solverInt + ("timeout" -> milliseconds))
+
 
   /** Sets an arbitrary global parameter in this `Parameters` object. */
   def globalParam(key: String, value: String): Parameters = clone(global = global + (key -> value))

@@ -336,6 +336,26 @@ package object z3 {
    *  `[D -> R]`.*/
   def mapZipped(f: FuncDecl, arrays: Exp*): Exp = new Exp(Native.mkMap(gcptr, f.ptr, arrays.length, arrays.map(_.ptr).toArray))
 
+  /** Creates a `forall` quantifier expression. The expression `boundVar` must be a constant that signifies the
+   *  bound variable in `body` and `pattern`. */
+  def forall(boundVar: Exp, body: Exp, pattern: Exp = null): Exp = if (pattern == null) {
+    new Exp(Native.mkForallConst(gcptr, 0, 1, Array(boundVar.ptr), 0, Array.empty, body.ptr))
+  } else {
+    val pattern1 = Native.substitute(gcptr, pattern.ptr, 1, Array(boundVar.ptr), Array(Native.mkBound(gcptr, 0, boundVar.sort.ptr)))
+    val pattern2 = Native.mkPattern(gcptr, 1, Array(pattern1))
+    new Exp(Native.mkForallConst(gcptr, 0, 1, Array(boundVar.ptr), 1, Array(pattern2), body.ptr))
+  }
+
+  /** Creates an `exists` quantifier expression. The expression `boundVar` must be a constant that signifies the
+   *  bound variable in `body` and `pattern`. */
+  def exists(boundVar: Exp, body: Exp, pattern: Exp = null): Exp = if (pattern == null) {
+    new Exp(Native.mkExistsConst(gcptr, 0, 1, Array(boundVar.ptr), 0, Array.empty, body.ptr))
+  } else {
+    val pattern1 = Native.substitute(gcptr, pattern.ptr, 1, Array(boundVar.ptr), Array(Native.mkBound(gcptr, 0, boundVar.sort.ptr)))
+    val pattern2 = Native.mkPattern(gcptr, 1, Array(pattern1))
+    new Exp(Native.mkExistsConst(gcptr, 0, 1, Array(boundVar.ptr), 1, Array(pattern2), body.ptr))
+  }
+
   /** Alias for `checkSat(assertions.toArray)` */
   @inline final def checkSat(assertions: Exp*): Status = checkSat(assertions.toArray)
 

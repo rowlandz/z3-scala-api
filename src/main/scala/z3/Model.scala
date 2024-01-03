@@ -69,7 +69,7 @@ object FuncInterp {
   }
 }
 
-/** An element in the finite map of a [[FuncInterpZ3]]. */
+/** An element in the finite map of a [[FuncInterp]]. */
 case class Entry(args: List[Exp], value: Exp) {
   override def toString: String = s"(${args.mkString(", ")}) |-> $value"
 }
