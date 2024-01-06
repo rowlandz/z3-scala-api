@@ -163,7 +163,7 @@ package object z3 {
    *  @param s decimal string representing the value of the literal */
   def real(s: String): Exp = new Exp(Native.mkNumeral(gcptr, s, realSort.ptr))
 
-  /** Creates a bit vector literal expression with sort `bitVectorSort(size)`
+  /** Creates a bit-vector literal expression with sort `bvSort(size)`
    *  @param v value of the literal */
   def bv(v: Int, size: Int): Exp = new Exp(Native.mkInt(gcptr, v, Native.mkBvSort(gcptr, size)))
 
@@ -209,19 +209,7 @@ package object z3 {
     new Exp(ePtr)
   }
 
-  /** Creates a logical AND expression. */
-  def and(es: Exp*): Exp = new Exp(Native.mkAnd(gcptr, es.length, es.map(_.ptr).toArray))
-
-  /** Creates a logical OR expression. */
-  def or(es: Exp*): Exp = new Exp(Native.mkOr(gcptr, es.length, es.map(_.ptr).toArray))
-
-  /** Creates a logical implication expression. Expressions `e1` and `e2` should be boolean-sorted.
-   *  @return expression that means `e1` ''logically implies'' `e2`.
-   **/
-  def implies(e1: Exp, e2: Exp): Exp = new Exp(Native.mkImplies(gcptr, e1.ptr, e2.ptr))
-
-  /** Creates a logical NOT expression. */
-  def not(e: Exp): Exp = new Exp(Native.mkNot(gcptr, e.ptr))
+  //---------- Propositional Logic and Equality --------------------------------
 
   /** Creates an equality expression with sort [[boolSort]]. The sorts of `e1` and `e2` should be the same. */
   def equ(e1: Exp, e2: Exp): Exp = new Exp(Native.mkEq(gcptr, e1.ptr, e2.ptr))
@@ -229,8 +217,49 @@ package object z3 {
   /** Creates an expression that means no two expressions in `es` are equal to each other. */
   def distinct(es: Exp*): Exp = new Exp(Native.mkDistinct(gcptr, es.length, es.map(_.ptr).toArray))
 
+  /** Creates a logical NOT expression. */
+  def not(e: Exp): Exp = new Exp(Native.mkNot(gcptr, e.ptr))
+
   /** Creates an `if-then-else` expression. */
   def ite(condE: Exp, thenE: Exp, elseE: Exp): Exp = new Exp(Native.mkIte(gcptr, condE.ptr, thenE.ptr, elseE.ptr))
+
+  /** Creates a logical implication expression. Expressions `e1` and `e2` should be boolean-sorted.
+   *  @return expression that means `e1` ''logically implies'' `e2`. */
+  def implies(e1: Exp, e2: Exp): Exp = new Exp(Native.mkImplies(gcptr, e1.ptr, e2.ptr))
+
+  /** Creates a logical AND expression. */
+  def and(es: Exp*): Exp = new Exp(Native.mkAnd(gcptr, es.length, es.map(_.ptr).toArray))
+
+  /** Creates a logical OR expression. */
+  def or(es: Exp*): Exp = new Exp(Native.mkOr(gcptr, es.length, es.map(_.ptr).toArray))
+
+  //---------- Integers and Reals ----------------------------------------------
+
+  /** Creates an addition expression. */
+  def add(es: Exp*): Exp = new Exp(Native.mkAdd(gcptr, es.length, es.map(_.ptr).toArray))
+
+  /** Creates a multiplication expression. */
+  def mul(es: Exp*): Exp = new Exp(Native.mkMul(gcptr, es.length, es.map(_.ptr).toArray))
+
+  /** Creates a subtraction expression. */
+  def sub(e1: Exp, e2: Exp): Exp = new Exp(Native.mkSub(gcptr, 2, Array(e1.ptr, e2.ptr)))
+
+  /** Creates a unary minus expression. */
+  def neg(e: Exp): Exp = new Exp(Native.mkUnaryMinus(gcptr, e.ptr))
+
+  /** Creates a division expression. */
+  def div(e1: Exp, e2: Exp): Exp = new Exp(Native.mkDiv(gcptr, e1.ptr, e2.ptr))
+
+  /** Modulo operation for integers. Result is always positive. Satisfies the property
+   *  `mod(x, y) = mod(x+y, y)` for all `x` and nonzero `y`. */
+  def mod(e1: Exp, e2: Exp): Exp = new Exp(Native.mkMod(gcptr, e1.ptr, e2.ptr))
+
+  /** Remainder operator for integers. Same as `mod` except the sign of the
+   *  result matches the sign of `e2`. */
+  def rem(e1: Exp, e2: Exp): Exp = new Exp(Native.mkRem(gcptr, e1.ptr, e2.ptr))
+
+  /** Creates a power expression. */
+  def power(e1: Exp, e2: Exp): Exp = new Exp(Native.mkPower(gcptr, e1.ptr, e2.ptr))
 
   /** Creates a less-than expression. */
   def lt(e1: Exp, e2: Exp): Exp = new Exp(Native.mkLt(gcptr, e1.ptr, e2.ptr))
@@ -244,20 +273,24 @@ package object z3 {
   /** Creates a greater-than-or-equal expression. */
   def ge(e1: Exp, e2: Exp): Exp = new Exp(Native.mkGe(gcptr, e1.ptr, e2.ptr))
 
-  /** Creates an addition expression. */
-  def add(es: Exp*): Exp = new Exp(Native.mkAdd(gcptr, es.length, es.map(_.ptr).toArray))
+  /** Creates division predicate. The expressions `t1` and `t2` must have sort `intSort`.
+   *  The predicate is true when `t1` divides `t2`. For the predicate to be part of linear
+   *  integer arithmetic, the first argument `t1` must be a non-zero integer.  */
+  def divides(e1: Exp, e2: Exp): Exp = new Exp(Native.mkDivides(gcptr, e1.ptr, e2.ptr))
 
-  /** Creates a subtraction expression. */
-  def sub(e1: Exp, e2: Exp): Exp = new Exp(Native.mkSub(gcptr, 2, Array(e1.ptr, e2.ptr)))
+  /** Coerces an `intSort` to a `realSort`. */
+  def int2real(e: Exp): Exp = new Exp(Native.mkInt2real(gcptr, e.ptr))
 
-  /** Creates a multiplication expression. */
-  def mul(es: Exp*): Exp = new Exp(Native.mkMul(gcptr, es.length, es.map(_.ptr).toArray))
+  /** Coerces a `realSort` to an `intSort`. */
+  def real2int(e: Exp): Exp = new Exp(Native.mkReal2int(gcptr, e.ptr))
 
-  /** Creates a division expression. */
-  def div(e1: Exp, e2: Exp): Exp = new Exp(Native.mkDiv(gcptr, e1.ptr, e2.ptr))
+  /** Predicate that checks if real number `e` is an integer. */
+  def isInt(e: Exp): Exp = new Exp(Native.mkIsInt(gcptr, e.ptr))
 
-  /** Creates a unary minus expression. */
-  def neg(e: Exp): Exp = new Exp(Native.mkUnaryMinus(gcptr, e.ptr))
+  //---------- Bit-vectors -----------------------------------------------------
+
+  /** Bitwise NOT. */
+  def bvnot(e: Exp): Exp = new Exp(Native.mkBvnot(gcptr, e.ptr))
 
   /** Bitwise AND. */
   def bvand(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvand(gcptr, e1.ptr, e2.ptr))
@@ -265,32 +298,8 @@ package object z3 {
   /** Bitwise OR. */
   def bvor(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvor(gcptr, e1.ptr, e2.ptr))
 
-  /** Bitwise NOT. */
-  def bvnot(e: Exp): Exp = new Exp(Native.mkBvnot(gcptr, e.ptr))
-
-  /** Bit-vector unsigned less than. */
-  def bvult(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvult(gcptr, e1.ptr, e2.ptr))
-
-  /** Bit-vector unsigned less than or equal to. */
-  def bvule(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvule(gcptr, e1.ptr, e2.ptr))
-
-  /** Bit-vector unsigned greater than. */
-  def bvugt(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvugt(gcptr, e1.ptr, e2.ptr))
-
-  /** Bit-vector unsigned greater than or equal to. */
-  def bvuge(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvuge(gcptr, e1.ptr, e2.ptr))
-
-  /** Bit-vector two's complement less than. */
-  def bvslt(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvslt(gcptr, e1.ptr, e2.ptr))
-
-  /** Bit-vector two's complement less than or equal to.  */
-  def bvsle(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvsle(gcptr, e1.ptr, e2.ptr))
-
-  /** Bit-vector two's complement greater than. */
-  def bvsgt(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvsgt(gcptr, e1.ptr, e2.ptr))
-
-  /** Bit-vector two's complement greater than or equal to. */
-  def bvsge(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvsge(gcptr, e1.ptr, e2.ptr))
+  /** Two's complement unary minus. */
+  def bvneg(e: Exp): Exp = new Exp(Native.mkBvneg(gcptr, e.ptr))
 
   /** Standard two's complement addition of bit-vectors. */
   def bvadd(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvadd(gcptr, e1.ptr, e2.ptr))
@@ -298,6 +307,32 @@ package object z3 {
   def bvsub(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvsub(gcptr, e1.ptr, e2.ptr))
 
   def bvmul(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvmul(gcptr, e1.ptr, e2.ptr))
+
+  /** Bit-vector unsigned less than. */
+  def bvult(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvult(gcptr, e1.ptr, e2.ptr))
+
+  /** Bit-vector two's complement less than. */
+  def bvslt(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvslt(gcptr, e1.ptr, e2.ptr))
+
+  /** Bit-vector unsigned less than or equal to. */
+  def bvule(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvule(gcptr, e1.ptr, e2.ptr))
+
+  /** Bit-vector two's complement less than or equal to.  */
+  def bvsle(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvsle(gcptr, e1.ptr, e2.ptr))
+
+  /** Bit-vector unsigned greater than. */
+  def bvugt(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvugt(gcptr, e1.ptr, e2.ptr))
+
+  /** Bit-vector two's complement greater than. */
+  def bvsgt(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvsgt(gcptr, e1.ptr, e2.ptr))
+
+  /** Bit-vector unsigned greater than or equal to. */
+  def bvuge(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvuge(gcptr, e1.ptr, e2.ptr))
+
+  /** Bit-vector two's complement greater than or equal to. */
+  def bvsge(e1: Exp, e2: Exp): Exp = new Exp(Native.mkBvsge(gcptr, e1.ptr, e2.ptr))
+
+  //----------------------------------------------
 
   /** Creates a constant array. The resulting array has the property that a `select`
    *  on an arbitrary index produces the value `v`.
