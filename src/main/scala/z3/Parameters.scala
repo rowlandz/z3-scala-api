@@ -1,14 +1,12 @@
 package z3
 
-/** Configuration parameters for Z3 and the Scala API.
+/** Configuration parameters for [[Job]]s.
  *
  *  Use [[z3.newParams]] to create a default object followed by chains of method calls
  *  to set specific parameters. For example, to turn on statistics, set the timeout
- *  to 10 seconds, and output the interaction to a file, initialize Z3 as follows:
+ *  to 10 seconds, and output the interaction to a file, initialize a job as follows:
  *  {{{
- *    startZ3("/path/to/libz3.so",
- *      newParams.stats().timeout(10000).smtlib2_log("z3log.smt")
- *    )
+ *    new Job(params = newParams.stats(true).timeout(10000))
  *  }}}
  *  For parameters that don't have a dedicated method, use `globalParam` or `solverParam`.
  */
@@ -16,11 +14,11 @@ class Parameters private[z3] (private[z3] val global: Map[String, String],
                               private[z3] val solverInt: Map[String, Int],
                               private[z3] val solverString: Map[String, String],
                               private[z3] val solverBool: Map[String, Boolean],
-                              private[z3] val apiBool: Map[String, Boolean]) {
+                              private[z3] val jobBool: Map[String, Boolean]) {
 
-  /** Scala API parameter: allows two datatype sorts to be created with the same name. The API prevents this
-   *  by default because it can cause confusing behavior. */
-  def allow_datatype_overwrite(): Parameters = clone(apiBool = apiBool + ("allow_datatype_overwrite" -> true))
+  /** Job parameter: allows two datatype sorts to be created with the same name. The default is
+   *  `false` because it can cause confusing behavior. */
+  def allow_datatype_overwrite(allow: Boolean): Parameters = clone(jobBool = jobBool + ("allow_datatype_overwrite" -> allow))
 
   /** Solver parameter: automatically configure solver. */
   def auto_config(on: Boolean): Parameters = clone(solverBool = solverBool + ("auto_config" -> on))
@@ -32,10 +30,10 @@ class Parameters private[z3] (private[z3] val global: Map[String, String],
   def max_memory(megabytes: Int): Parameters = clone(solverInt = solverInt + ("max_memory" -> megabytes))
 
   /** Global parameter: turn on proof generation, it must be enabled when the Z3 context is created */
-  def proof(): Parameters = clone(global = global + ("proof" -> "true"))
+  def proof(on: Boolean): Parameters = clone(global = global + ("proof" -> on.toString))
 
   /** Global parameter: enable statistics */
-  def stats(): Parameters = clone(global = global + ("stats" -> "true"))
+  def stats(on: Boolean): Parameters = clone(global = global + ("stats" -> on.toString))
 
   /** Solver parameter: file to save solver interaction */
   def smtlib2_log(filename: String): Parameters = clone(solverString = solverString + ("smtlib2_log" -> filename))
@@ -61,8 +59,8 @@ class Parameters private[z3] (private[z3] val global: Map[String, String],
             solverInt: Map[String, Int] = solverInt,
             solverString: Map[String, String] = solverString,
             solverBool: Map[String, Boolean] = solverBool,
-            apiBool: Map[String, Boolean] = apiBool): Parameters =
-    new Parameters(global, solverInt, solverString, solverBool, apiBool)
+            jobBool: Map[String, Boolean] = jobBool): Parameters =
+    new Parameters(global, solverInt, solverString, solverBool, jobBool)
 }
 
 /*

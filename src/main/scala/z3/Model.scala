@@ -1,7 +1,6 @@
 package z3
 
 import com.microsoft.z3.Native
-import z3.GlobalState.{gcptr => gcptr}
 
 /** A set of interpretations (assignments) of uninterpreted sorts, constants, and functions. */
 case class Model(sorts: Map[String, List[Exp]], constants: Map[String, Exp], functions: Map[String, FuncInterp]) {
@@ -13,38 +12,38 @@ case class Model(sorts: Map[String, List[Exp]], constants: Map[String, Exp], fun
 }
 
 object Model {
-  private[z3] def create(ptr: Long): Model = {
-    Native.modelIncRef(gcptr, ptr)
+  private[z3] def create(job: Job, ptr: Long): Model = {
+    Native.modelIncRef(job.cptr, ptr)
 
-    val sorts: Map[String, List[Exp]] = (0 until Native.modelGetNumSorts(gcptr, ptr)).map { i =>
-      val sortPtr = Native.modelGetSort(gcptr, ptr, i)
-      val sortName = Native.getSymbolString(gcptr, Native.getSortName(gcptr, sortPtr))
+    val sorts: Map[String, List[Exp]] = (0 until Native.modelGetNumSorts(job.cptr, ptr)).map { i =>
+      val sortPtr = Native.modelGetSort(job.cptr, ptr, i)
+      val sortName = Native.getSymbolString(job.cptr, Native.getSortName(job.cptr, sortPtr))
 
-      val universePtr = Native.modelGetSortUniverse(gcptr, ptr, sortPtr)
-      Native.astVectorIncRef(gcptr, universePtr)
-      val universe = (0 until Native.astVectorSize(gcptr, universePtr)).map { i =>
-        new Exp(Native.astVectorGet(gcptr, universePtr, i))
+      val universePtr = Native.modelGetSortUniverse(job.cptr, ptr, sortPtr)
+      Native.astVectorIncRef(job.cptr, universePtr)
+      val universe = (0 until Native.astVectorSize(job.cptr, universePtr)).map { i =>
+        new Exp(job, Native.astVectorGet(job.cptr, universePtr, i))
       }.toList
-      Native.astVectorDecRef(gcptr, universePtr)
+      Native.astVectorDecRef(job.cptr, universePtr)
 
       sortName -> universe
     }.toMap
 
-    val constants: Map[String, Exp] = (0 until Native.modelGetNumConsts(gcptr, ptr)).map { i =>
-      val declPtr = Native.modelGetConstDecl(gcptr, ptr, i)
-      val name = Native.getSymbolString(gcptr, Native.getDeclName(gcptr, declPtr))
-      val interp = new Exp(Native.modelGetConstInterp(gcptr, ptr, declPtr))
+    val constants: Map[String, Exp] = (0 until Native.modelGetNumConsts(job.cptr, ptr)).map { i =>
+      val declPtr = Native.modelGetConstDecl(job.cptr, ptr, i)
+      val name = Native.getSymbolString(job.cptr, Native.getDeclName(job.cptr, declPtr))
+      val interp = new Exp(job, Native.modelGetConstInterp(job.cptr, ptr, declPtr))
       name -> interp
     }.toMap
 
-    val functions: Map[String, FuncInterp] = (0 until Native.modelGetNumFuncs(gcptr, ptr)).map { i =>
-      val declPtr = Native.modelGetFuncDecl(gcptr, ptr, i)
-      val name = Native.getSymbolString(gcptr, Native.getDeclName(gcptr, declPtr))
-      val interp = FuncInterp.create(Native.modelGetFuncInterp(gcptr, ptr, declPtr))
+    val functions: Map[String, FuncInterp] = (0 until Native.modelGetNumFuncs(job.cptr, ptr)).map { i =>
+      val declPtr = Native.modelGetFuncDecl(job.cptr, ptr, i)
+      val name = Native.getSymbolString(job.cptr, Native.getDeclName(job.cptr, declPtr))
+      val interp = FuncInterp.create(job, Native.modelGetFuncInterp(job.cptr, ptr, declPtr))
       name -> interp
     }.toMap
 
-    Native.modelDecRef(gcptr, ptr)
+    Native.modelDecRef(job.cptr, ptr)
     Model(sorts, constants, functions)
   }
 }
@@ -56,15 +55,15 @@ case class FuncInterp(entries: List[Entry], elseValue: Exp) {
 }
 
 object FuncInterp {
-  private[z3] def create(ptr: Long): FuncInterp = {
-    Native.funcInterpIncRef(gcptr, ptr)
+  private[z3] def create(job: Job, ptr: Long): FuncInterp = {
+    Native.funcInterpIncRef(job.cptr, ptr)
 
-    val entries = (0 until Native.funcInterpGetNumEntries(gcptr, ptr)).map { i =>
-      Entry.create(Native.funcInterpGetEntry(gcptr, ptr, i))
+    val entries = (0 until Native.funcInterpGetNumEntries(job.cptr, ptr)).map { i =>
+      Entry.create(job, Native.funcInterpGetEntry(job.cptr, ptr, i))
     }.toList
-    val elseValue: Exp = new Exp(Native.funcInterpGetElse(gcptr, ptr))
+    val elseValue: Exp = new Exp(job, Native.funcInterpGetElse(job.cptr, ptr))
 
-    Native.funcInterpDecRef(gcptr, ptr)
+    Native.funcInterpDecRef(job.cptr, ptr)
     FuncInterp(entries, elseValue)
   }
 }
@@ -75,15 +74,15 @@ case class Entry(args: List[Exp], value: Exp) {
 }
 
 object Entry {
-  private[z3] def create(ptr: Long): Entry = {
-    Native.funcEntryIncRef(gcptr, ptr)
+  private[z3] def create(job: Job, ptr: Long): Entry = {
+    Native.funcEntryIncRef(job.cptr, ptr)
 
-    val args: List[Exp] = (0 until Native.funcEntryGetNumArgs(gcptr, ptr)).map { i =>
-      new Exp(Native.funcEntryGetArg(gcptr, ptr, i))
+    val args: List[Exp] = (0 until Native.funcEntryGetNumArgs(job.cptr, ptr)).map { i =>
+      new Exp(job, Native.funcEntryGetArg(job.cptr, ptr, i))
     }.toList
-    val value = new Exp(Native.funcEntryGetValue(gcptr, ptr))
+    val value = new Exp(job, Native.funcEntryGetValue(job.cptr, ptr))
 
-    Native.funcEntryDecRef(gcptr, ptr)
+    Native.funcEntryDecRef(job.cptr, ptr)
     Entry(args, value)
   }
 }

@@ -1,6 +1,6 @@
 package z3
 
-/** The result from the a satisfiability check [[checkSat(assertions:Array*]]. */
+/** The result from the a satisfiability check [[Job.checkSat(assertions:Array*]]. */
 sealed trait Status
 
 /** The status that indicates unsatisfiability. */

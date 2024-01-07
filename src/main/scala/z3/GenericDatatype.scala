@@ -22,7 +22,7 @@ import com.microsoft.z3.Z3Exception
  *  @param tparams type parameters
  *  @param cons constructors
  */
-class GenericDatatype(val name: String, val tparams: List[String], val cons: GenericConstructor*) {
+class GenericDatatype(job: Job, val name: String, val tparams: List[String], val cons: GenericConstructor*) {
 
   /** Creates a data type by replacing all type parameters in this generic data type with the supplied type arguments.
    *  @param newName name of the newly created data type
@@ -31,7 +31,7 @@ class GenericDatatype(val name: String, val tparams: List[String], val cons: Gen
     if (targs.length != tparams.length)
       throw new Z3Exception(s"Cannot instantiate generic datatype $name: incorrect number of type arguments")
     val tparamValues: Map[String, Sort] = tparams.zip(targs).toMap
-    datatypeSort(newName, cons.map(_.instantiate(tparamValues)):_*)
+    job.datatypeSort(newName, cons.map(_.instantiate(tparamValues)):_*)
   }
 
   /** Returns the SMTLib2  `(declare-datatype ...)` type declaration string. */
@@ -57,9 +57,9 @@ class GenericDatatype(val name: String, val tparams: List[String], val cons: Gen
   @inline override final def toString: String = smt2string
 }
 
-class GenericConstructor(val name: String, val recognizer: String, val fields: GenericField*) {
+class GenericConstructor(job: Job, val name: String, val recognizer: String, val fields: GenericField*) {
   private[z3] def instantiate(tparamValues: Map[String, Sort]): Constructor =
-    constructor(name, recognizer, fields.map(_.instantiate(tparamValues)):_*)
+    job.constructor(name, recognizer, fields.map(_.instantiate(tparamValues)):_*)
 }
 
 case class GenericField(name: String, sortOrTparam: Either[Sort, String]) {
