@@ -1,6 +1,6 @@
 package z3
 
-/** Configuration parameters for [[Job]]s.
+/** Configuration parameters for Z3 and [[Job]]s.
  *
  *  Use [[z3.newParams]] to create a default object followed by chains of method calls
  *  to set specific parameters. For example, to turn on statistics, set the timeout
@@ -8,9 +8,10 @@ package z3
  *  {{{
  *    new Job(params = newParams.stats(true).timeout(10000))
  *  }}}
- *  For parameters that don't have a dedicated method, use `globalParam` or `solverParam`.
+ *  For parameters that don't have a dedicated method, use `globalParam`, `contextParam`, or `solverParam`.
  */
 class Parameters private[z3] (private[z3] val global: Map[String, String],
+                              private[z3] val context: Map[String, String],
                               private[z3] val solverInt: Map[String, Int],
                               private[z3] val solverString: Map[String, String],
                               private[z3] val solverBool: Map[String, Boolean],
@@ -23,17 +24,27 @@ class Parameters private[z3] (private[z3] val global: Map[String, String],
   /** Solver parameter: automatically configure solver. */
   def auto_config(on: Boolean): Parameters = clone(solverBool = solverBool + ("auto_config" -> on))
 
+  /** Global parameter: pretty print real numbers using decimal notation (the output may be truncated).
+   *  Z3 adds a ? if the value is not precise. (default: false) */
+  def decimal(on: Boolean): Parameters = clone(global = global + ("pp.decimal" -> on.toString))
+
+  /** Global parameter: maximum number of decimal places to be used when decimal=true (default: 10) */
+  def decimal_precision(digits: Int): Parameters = clone(global = global + ("pp.decimal_precision" -> digits.toString))
+
+  /** Global parameter: use real-numbered floating point literals (e.g, +1.0p-1) during pretty printing (default: false) */
+  def fp_real_literals(on: Boolean): Parameters = clone(global = global + ("pp.fp_real_literals" -> on.toString))
+
   /** Solver parameter: enable or disable model based quantifier instantiation. */
   def mbqi(on: Boolean): Parameters = clone(solverBool = solverBool + ("smt.mbqi" -> on))
 
   /** Solver parameter: maximum amount of memory in megabytes */
   def max_memory(megabytes: Int): Parameters = clone(solverInt = solverInt + ("max_memory" -> megabytes))
 
-  /** Global parameter: turn on proof generation, it must be enabled when the Z3 context is created */
-  def proof(on: Boolean): Parameters = clone(global = global + ("proof" -> on.toString))
+  /** Context parameter: turn on proof generation, it must be enabled when the Z3 context is created */
+  def proof(on: Boolean): Parameters = clone(context = context + ("proof" -> on.toString))
 
-  /** Global parameter: enable statistics */
-  def stats(on: Boolean): Parameters = clone(global = global + ("stats" -> on.toString))
+  /** Context parameter: enable statistics */
+  def stats(on: Boolean): Parameters = clone(context = context + ("stats" -> on.toString))
 
   /** Solver parameter: file to save solver interaction */
   def smtlib2_log(filename: String): Parameters = clone(solverString = solverString + ("smtlib2_log" -> filename))
@@ -44,6 +55,9 @@ class Parameters private[z3] (private[z3] val global: Map[String, String],
 
   /** Sets an arbitrary global parameter in this `Parameters` object. */
   def globalParam(key: String, value: String): Parameters = clone(global = global + (key -> value))
+
+  /** Sets an arbitrary context parameter in this `Parameters` object. */
+  def contextParam(key: String, value: String): Parameters = clone(context = context + (key -> value))
 
   /** Sets an arbitrary solver parameter in this `Parameters` object. */
   def solverParam(key: String, value: String): Parameters = clone(solverString = solverString + (key -> value))
@@ -56,15 +70,35 @@ class Parameters private[z3] (private[z3] val global: Map[String, String],
 
   @inline private final
   def clone(global: Map[String, String] = global,
+            context: Map[String, String] = context,
             solverInt: Map[String, Int] = solverInt,
             solverString: Map[String, String] = solverString,
             solverBool: Map[String, Boolean] = solverBool,
             jobBool: Map[String, Boolean] = jobBool): Parameters =
-    new Parameters(global, solverInt, solverString, solverBool, jobBool)
+    new Parameters(global, context, solverInt, solverString, solverBool, jobBool)
 }
 
 /*
-Legal global parameters are as follows. This is not consistant with param descriptions
+Legal global parameters are:
+  bounded (bool) (default: false)
+  bv_literals (bool) (default: true)
+  bv_neg (bool) (default: false)
+  decimal (bool) (default: false)
+  decimal_precision (unsigned int) (default: 10)
+  fixed_indent (bool) (default: false)
+  flat_assoc (bool) (default: true)
+  fp_real_literals (bool) (default: false)
+  max_depth (unsigned int) (default: 5)
+  max_indent (unsigned int) (default: 4294967295)
+  max_num_lines (unsigned int) (default: 4294967295)
+  max_ribbon (unsigned int) (default: 80)
+  max_width (unsigned int) (default: 80)
+  min_alias_size (unsigned int) (default: 10)
+  pretty_proof (bool) (default: false)
+  simplify_implies (bool) (default: true)
+  single_line (bool) (default: false)
+
+Legal context parameters are as follows. This is not consistant with param descriptions
 for some reason which is very annoying.
   auto_config (bool) (default: true)
   debug_ref_count (bool) (default: false)

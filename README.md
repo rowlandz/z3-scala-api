@@ -2,12 +2,13 @@
 
 API for using Microsoft's Z3 SMT solver from Scala.
 
-This API offers a better user experience for Scala programmers than the Java bindings that come with Z3 by default. The tradeoff is deviation from the other APIs (in places). If you just want to call the C API functions from Scala, use the Java bindings.
+This API offers a better user experience for Scala programmers than the Java bindings that come with Z3 by default. The tradeoff is deviation from the Java and C APIs (in places). If you just want to call the C API functions from Scala, use the Java bindings.
 
 Specific differences between the Scala API and the Java bindings:
+* More "convenience functions" (e.g., `intConst("x")` instead of `const("x", intSort)`).
 * Less rich types for expressions (e.g., `Exp` rather than `Exp[BoolSort]`).
-* Single global Z3 context and solver.
 * Support for defined functions and generic datatypes, both of which exist in SMTLib2 but not Z3 native.
+* More fleshed-out support for datatypes, including generic datatypes.
 
 Example:
 
@@ -15,11 +16,12 @@ Example:
 import z3._
 import z3.OperatorImplicits._
 
-object Main {
+object Main extends Job(
+  libz3_path="/full/path/to/libz3.so",
+  params = newParams.timeout(10000).smtlib2_log("output.smt")
+) {
   def main(args: Array[String]): Unit = {
-    startZ3("/path/to/libz3.so",
-      newParams.timeout(10000).smtlib2_log("output.smt")
-    )
+    implicit val j: Job = this
 
     val x = intConst("x")
     val y = intConst("y")
@@ -36,17 +38,14 @@ object Main {
         println(constants("y"))  // ~> 8
     }
 
-    stopZ3()
+    close()
   }
 }
 ```
 
 
 TODO:
-* Bitvectors
-* IEEE floating point
 * SetSort (extends ArraySort)
-* Quantifiers
 * Sequences
 * EnumSort (extends DatatypeSort)
 * List sort (is it a built-in datatype?)

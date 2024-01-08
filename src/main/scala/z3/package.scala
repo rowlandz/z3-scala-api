@@ -43,5 +43,5 @@ import com.microsoft.z3.enumerations.Z3_lbool
 package object z3 {
   /** Default configuration parameters for Z3.
    *  @see [[Parameters]] */
-  val newParams: Parameters = new Parameters(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
+  val newParams: Parameters = new Parameters(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
 }

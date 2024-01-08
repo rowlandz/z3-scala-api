@@ -149,6 +149,9 @@ class SetSort private[z3] (job: Job, ptr: Long) extends ArraySort(job, ptr)
  *  set of distinct abstract values. */
 class UninterpretedSort private[z3] (job: Job, ptr: Long) extends Sort(job, ptr)
 
+/** A sort representing values of the IEEE-754 floating-point standard. */
+final class FPSort private[z3] (job: Job, ptr: Long) extends Sort(job, ptr)
+
 private[z3] object Sort {
   def create(job: Job, ptr: Long): Sort = Z3_sort_kind.fromInt(Native.getSortKind(job.cptr, ptr)) match {
     case Z3_sort_kind.Z3_UNINTERPRETED_SORT => new UninterpretedSort(job, ptr)
@@ -160,8 +163,8 @@ private[z3] object Sort {
     case Z3_sort_kind.Z3_DATATYPE_SORT => new DatatypeSort(job, ptr)
     case Z3_sort_kind.Z3_RELATION_SORT => ???
     case Z3_sort_kind.Z3_FINITE_DOMAIN_SORT => ???
-    case Z3_sort_kind.Z3_FLOATING_POINT_SORT => ???
-    case Z3_sort_kind.Z3_ROUNDING_MODE_SORT => ???
+    case Z3_sort_kind.Z3_FLOATING_POINT_SORT => new FPSort(job, ptr)
+    case Z3_sort_kind.Z3_ROUNDING_MODE_SORT => throw new Z3Exception("Z3 Scala error: attempt to create a sort of kind Z3_ROUNDING_MODE_SORT")
     case Z3_sort_kind.Z3_SEQ_SORT => ???
     case Z3_sort_kind.Z3_RE_SORT => ???
     case Z3_sort_kind.Z3_CHAR_SORT => ???
